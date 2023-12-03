@@ -80,7 +80,7 @@ class Trainer():
                     "loss": cur_loss,
                     "ppl": ppl
                     }, step=self.step)
-                print(f'| epoch {epoch} | loss {cur_loss:.4f} | ppl {ppl:.4f}')
+                # print(f'| epoch {epoch} | loss {cur_loss:.4f} | ppl {ppl:.4f}')
                 total_loss = 0
 
     def _test_epoch(self) -> float:
