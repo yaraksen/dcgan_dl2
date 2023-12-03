@@ -40,10 +40,10 @@ def main(args):
                project=wandb_project,
                config=model_params)
 
-    train_dataset = TinyStories(data_path, train=True, limit=4000)
+    train_dataset = TinyStories(data_path, train=True)
     train_loader = DataLoader(train_dataset, train_batch_size, shuffle=True, drop_last=True, num_workers=4)
     
-    test_dataset = TinyStories(data_path, train=False, limit=4000)
+    test_dataset = TinyStories(data_path, train=False)
     test_loader = DataLoader(test_dataset, train_batch_size, shuffle=False, num_workers=4)
     
     print('Train dataset size:', len(train_dataset))

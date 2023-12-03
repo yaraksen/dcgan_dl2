@@ -1,3 +1,4 @@
+from genericpath import exists
 import torch
 import torch.nn.functional as F
 from torch.nn.utils import clip_grad_norm_
@@ -10,6 +11,7 @@ from numpy import exp as np_exp
 import wandb
 from torch.cuda.amp import GradScaler
 from torch import autocast
+import os
 
 # https://pytorch.org/tutorials/beginner/transformer_tutorial.html
 # some functions are from my DLA homework template
@@ -118,6 +120,7 @@ class Trainer():
         return total_norm.item()
 
     def save_checkpoint(self, epoch):
+        os.mkdir("ckpts", exist_ok=True)
         arch = type(self.model).__name__
         state = {
             "arch": arch,
@@ -126,7 +129,7 @@ class Trainer():
             "optimizer": self.optimizer.state_dict(),
             "scheduler": self.lr_scheduler.state_dict()
         }
-        filename = f"checkpoint-epoch{epoch}.pth"
+        filename = f"ckpts/checkpoint-epoch{epoch}.pth"
         torch.save(state, filename)
         print("Saving checkpoint: {} ...".format(filename))
         self.log_ckpt(filename, "checkpoint")
