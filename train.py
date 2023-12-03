@@ -12,6 +12,8 @@ from math import ceil
 
 SEED = 42
 torch.manual_seed(SEED)
+torch.backends.cudnn.deterministic = False
+torch.backends.cudnn.benchmark = True
 
 def main(args):
     device = torch.device("cpu") if args.use_cpu else torch.device(f"cuda:0")

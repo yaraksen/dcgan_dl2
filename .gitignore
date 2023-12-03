@@ -4,3 +4,4 @@ all_stories.txt
 tiny_stories_tokenized.npy
 checkpoint-epoch*
 wandb
+ckpts/*

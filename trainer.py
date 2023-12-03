@@ -120,7 +120,7 @@ class Trainer():
         return total_norm.item()
 
     def save_checkpoint(self, epoch):
-        os.mkdir("ckpts", exist_ok=True)
+        os.makedirs("ckpts", exist_ok=True)
         arch = type(self.model).__name__
         state = {
             "arch": arch,
