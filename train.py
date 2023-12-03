@@ -28,7 +28,7 @@ def main(args):
         "nhead": 8,
         "d_hid": 2048,
         "nlayers": 8,
-        "dropout": 0.1,
+        "dropout": 0.05,
         "max_len": max_len,
         "device": device
     }
