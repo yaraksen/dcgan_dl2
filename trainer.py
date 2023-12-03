@@ -16,7 +16,7 @@ from torch import autocast
 
 
 class Trainer():
-    def __init__(self, model: MurkyLM, criterion, optimizer, lr_scheduler, train_loader, test_loader, num_epochs: int, grad_accum_steps, device):
+    def __init__(self, model: MurkyLM, criterion, optimizer, lr_scheduler, train_loader, test_loader, num_epochs: int, grad_accum_steps, use_bf16: bool, device):
         super().__init__()
         self.train_dataloader = train_loader
         self.test_dataloader = test_loader
@@ -30,6 +30,7 @@ class Trainer():
         self.num_epochs = num_epochs
         self.grad_accum_steps = grad_accum_steps
         self.step = 0
+        self.use_bf16 = use_bf16
         
         self.scaler = GradScaler()
     
@@ -51,7 +52,7 @@ class Trainer():
         for batch_num, input_ids in enumerate(tqdm(self.train_dataloader, desc="Train")):
             input_ids = input_ids.to(self.device)
             
-            with autocast(enabled=True, device_type='cuda', dtype=torch.float16):
+            with autocast(enabled=self.use_bf16, device_type='cuda', dtype=torch.float16):
                 output = self.model(input_ids[..., :-1])
                 loss = self.criterion(output.reshape(-1, output.shape[-1]), input_ids[..., 1:].reshape(-1))
                 loss = loss / self.grad_accum_steps

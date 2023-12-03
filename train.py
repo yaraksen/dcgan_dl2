@@ -6,7 +6,7 @@ from model import MurkyLM
 from torch.nn import CrossEntropyLoss
 from trainer import Trainer
 import wandb
-from utils import find_device
+# from utils import find_device
 from math import ceil
 
 
@@ -14,9 +14,10 @@ SEED = 42
 torch.manual_seed(SEED)
 
 def main(args):
-    device = torch.device("cpu") if args.use_cpu else torch.device(f"cuda:{find_device()}")
+    device = torch.device("cpu") if args.use_cpu else torch.device(f"cuda:0")
     data_path = "tiny_stories_tokenized.npy"
     sp_model_prefix = "MurkyLM"
+    use_bf16 = False
     train_batch_size = 256
     num_epochs = 20
     grad_accum_steps = 2
@@ -39,10 +40,10 @@ def main(args):
                project=wandb_project,
                config=model_params)
 
-    train_dataset = TinyStories(data_path, train=True)
+    train_dataset = TinyStories(data_path, train=True, limit=4000)
     train_loader = DataLoader(train_dataset, train_batch_size, shuffle=True, drop_last=True, num_workers=4)
     
-    test_dataset = TinyStories(data_path, train=False)
+    test_dataset = TinyStories(data_path, train=False, limit=4000)
     test_loader = DataLoader(test_dataset, train_batch_size, shuffle=False, num_workers=4)
     
     print('Train dataset size:', len(train_dataset))
@@ -70,6 +71,7 @@ def main(args):
         test_loader,
         num_epochs,
         grad_accum_steps,
+        use_bf16,
         device
     )
 
