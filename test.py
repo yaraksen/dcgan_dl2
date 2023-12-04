@@ -59,8 +59,8 @@ def murkylm_ppl(pretrained_path: str, N: int, temp: float):
             predictions.append(tokenizer.decode(enc.tolist()))
     results = perplexity.compute(predictions=predictions, batch_size=16, model_id='gpt2-large', device="cuda")
     print(lens)
-    return results['mean_perplexity']
+    return results['mean_perplexity'], predictions[:10]
     
 if __name__ == "__main__":
-    ppl = murkylm_ppl("checkpoint-epoch10.pth")
+    ppl, texts = murkylm_ppl("checkpoint-epoch10.pth")
     print("mean_perplexity:", ppl)
