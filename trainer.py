@@ -99,12 +99,6 @@ class Trainer():
             "test_ppl": test_ppl
             }, step=self.step)
 
-    # def _clip_grad_norm(self):
-    #     if self.config["trainer"].get("grad_norm_clip", None) is not None:
-    #         clip_grad_norm_(
-    #             self.model.parameters(), self.config["trainer"]["grad_norm_clip"]
-    #         )
-
     @torch.no_grad()
     def get_grad_norm(self, norm_type=2):
         parameters = self.model.parameters()

@@ -11,9 +11,10 @@ tar -xvf TinyStories_all_data.tar.gz -C tiny_stories
 ```
 
 ## Data manipulation
-Uniting all the texts in single file to train Sentencepiece tokenizer
+Uniting all the texts in single file to train Sentencepiece tokenizer, tokenize_dataset.py to create .npy dataset
 ```python
 python concat_stories.py
+python tokenize_dataset.py
 ```
 
 ## Training

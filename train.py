@@ -6,7 +6,6 @@ from model import MurkyLM
 from torch.nn import CrossEntropyLoss
 from trainer import Trainer
 import wandb
-# from utils import find_device
 from math import ceil
 
 
@@ -19,7 +18,7 @@ def main(args):
     device = torch.device("cpu") if args.use_cpu else torch.device(f"cuda:0")
     data_path = "tiny_stories_tokenized.npy"
     sp_model_prefix = "MurkyLM"
-    use_bf16 = True
+    use_bf16 = False if args.use_cpu else True
     train_batch_size = 256
     num_epochs = 20
     grad_accum_steps = 2
