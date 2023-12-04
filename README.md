@@ -12,12 +12,18 @@ tar -xvf TinyStories_all_data.tar.gz -C tiny_stories
 
 ## Data manipulation
 Uniting all the texts in single file to train Sentencepiece tokenizer, tokenize_dataset.py to create .npy dataset
-```python
+```bash
 python concat_stories.py
 python tokenize_dataset.py
 ```
 
 ## Training
-```python
+```bash
 python train.py -wk="YOUR_WANDB_KEY"
+```
+
+## Testing
+Put checkpoint-epoch12.pth from Yandex.Disk into main directory, launch this to get PPL (uses ```evaluate``` which is not installed by default)
+```bash
+python test.py
 ```
