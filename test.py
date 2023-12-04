@@ -57,7 +57,7 @@ def murkylm_ppl(pretrained_path: str, N: int, temp: float):
             enc = cut_after_eos(enc[1:], tokenizer.eos_id())
             lens.append(len(enc))
             predictions.append(tokenizer.decode(enc.tolist()))
-    results = perplexity.compute(predictions=predictions, batch_size=16, model_id='gpt2-large', device="cuda")
+    results = perplexity.compute(predictions=predictions, batch_size=8, model_id='gpt2-large', device="cuda")
     print(lens)
     print("\n\n".join(predictions[:5]))
     print(f"mean ppl for temp={temp}:", results['mean_perplexity'])
