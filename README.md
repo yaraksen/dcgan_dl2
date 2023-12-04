@@ -19,5 +19,5 @@ python tokenize_dataset.py
 
 ## Training
 ```python
-python train.py
+python train.py -wk="YOUR_WANDB_KEY"
 ```

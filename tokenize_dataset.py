@@ -1,11 +1,21 @@
 import numpy as np
 from glob import glob
 import json
-from sentencepiece import SentencePieceProcessor
+from sentencepiece import SentencePieceProcessor, SentencePieceTrainer
 from tqdm import tqdm
+import os
+
 
 def main(data_path: str, tokenizer_tag: str, max_len: int):
     files = glob(f"{data_path}/*.json")
+    
+    if not os.path.isfile(f"{tokenizer_tag}.model"):
+        assert os.path.isfile("all_stories.txt"), "all_stories.txt does not exist"
+        SentencePieceTrainer.train(
+            input="all_stories.txt", vocab_size=5000,
+            model_type="bpe", model_prefix=tokenizer_tag
+        )
+    
     tokenizer = SentencePieceProcessor(model_file=f"{tokenizer_tag}.model")
 
     all_input_ids = []
