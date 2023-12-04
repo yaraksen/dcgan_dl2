@@ -62,8 +62,6 @@ def murkylm_ppl(pretrained_path: str, N: int, temp: float):
     print("\n\n".join(predictions[:5]))
     print(f"mean ppl for temp={temp}:", results['mean_perplexity'])
     
-    return results['mean_perplexity'], predictions
-    
 if __name__ == "__main__":
     ppl, texts = murkylm_ppl("checkpoint-epoch12.pth")
     print("mean_perplexity:", ppl)
