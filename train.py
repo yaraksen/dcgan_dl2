@@ -24,7 +24,7 @@ def main(args):
     else:
         data_path = "cats/"
     train_batch_size = 128
-    num_epochs = 4000
+    num_epochs = 8000
     lr = 2e-4
     beta1 = 0.5
     weight_decay = 0.0
