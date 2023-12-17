@@ -27,13 +27,16 @@ def main(args):
     num_epochs = 8000
     lr = 2e-4
     beta1 = 0.5
-    weight_decay = 1e-2
+    weight_decay = 0.0
     model_params = {
         "latent_dim": 100,
         "image_num_channels": 3,
         "G_feature_map_dim": 64,
         "D_feature_map_dim": 64,
         "device": device,
+        "weight_decay": weight_decay,
+        "beta1": beta1,
+        "lr": lr
     }
     wandb_project = "murky_gan"
     ##### END CONFIG ######
