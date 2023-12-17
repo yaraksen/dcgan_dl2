@@ -27,7 +27,7 @@ def main(args):
     num_epochs = 8000
     lr = 2e-4
     beta1 = 0.5
-    weight_decay = 0.0
+    weight_decay = 1e-2
     model_params = {
         "latent_dim": 100,
         "image_num_channels": 3,
