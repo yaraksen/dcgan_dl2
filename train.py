@@ -20,7 +20,7 @@ def main(args):
     device = torch.device("cpu") if args.use_cpu else torch.device(f"cuda:0")
     # use_bf16 = False if args.use_cpu else True
     if os.path.exists("/kaggle"):
-        data_path = "input/cats-faces-64x64-for-generative-models/cats/"
+        data_path = "/kaggle/input/cats-faces-64x64-for-generative-models/cats/"
     else:
         data_path = "cats/"
     train_batch_size = 128
