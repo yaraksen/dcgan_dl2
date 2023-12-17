@@ -7,6 +7,7 @@ from torch.nn import BCELoss
 from trainer import Trainer
 import wandb
 from math import ceil
+import os
 
 
 SEED = 42
@@ -18,12 +19,15 @@ torch.backends.cudnn.benchmark = True
 def main(args):
     device = torch.device("cpu") if args.use_cpu else torch.device(f"cuda:0")
     # use_bf16 = False if args.use_cpu else True
-    data_path = "cats/"
+    if os.path.exists("/kaggle"):
+        data_path = "input/cats-faces-64x64-for-generative-models/cats/"
+    else:
+        data_path = "cats/"
     train_batch_size = 128
-    num_epochs = 200
+    num_epochs = 4000
     lr = 2e-4
     beta1 = 0.5
-    weight_decay = 1e-4
+    weight_decay = 0.0
     model_params = {
         "latent_dim": 100,
         "image_num_channels": 3,

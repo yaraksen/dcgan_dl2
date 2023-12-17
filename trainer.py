@@ -40,7 +40,7 @@ class Trainer:
         self.latent_dim = latent_dim
 
     def train(self) -> None:
-        save_interval = 10
+        save_interval = 100
         for epoch in range(self.num_epochs):
             self._train_epoch(epoch)
             if (epoch % save_interval == 0) or (epoch + 1 == self.num_epochs):

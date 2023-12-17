@@ -1,12 +1,5 @@
 __pycache__
-tiny_stories
-all_stories.txt
-tiny_stories_tokenized.npy
 checkpoint-epoch*
 wandb
 ckpts/*
-data
-test
-train
-valid
 cats/*
