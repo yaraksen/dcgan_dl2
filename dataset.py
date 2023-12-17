@@ -33,7 +33,7 @@ from PIL import Image
 
 class KittyDataset(Dataset):
     def __init__(self, data_path: str, limit: int = None):
-        self.all_files = list(Path(data_path).glob("**/*.jpg"))
+        self.all_files = list(Path(data_path).glob("/*.jpg"))
 
         if limit is not None:
             self.all_files = self.all_files[:limit]
