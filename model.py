@@ -4,60 +4,10 @@ from torch import Tensor
 import math
 from numpy import prod
 
-# https://pytorch.org/tutorials/beginner/transformer_tutorial.html
+# https://pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html#data
 
 
-class PositionalEncoding(nn.Module):
-    def __init__(self, d_model: int, dropout: float, max_len: int):
-        super().__init__()
-        self.dropout = nn.Dropout(p=dropout)
-
-        position = torch.arange(max_len).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
-        pe = torch.zeros(max_len, 1, d_model)
-        pe[:, 0, 0::2] = torch.sin(position * div_term)
-        pe[:, 0, 1::2] = torch.cos(position * div_term)
-        self.register_buffer('pe', pe)
-
-    def forward(self, x: Tensor) -> Tensor:
-        """
-        Arguments:
-            x: Tensor, shape ``[seq_len, batch_size, embedding_dim]``
-        """
-        x = x + self.pe[:x.size(0)]
-        return self.dropout(x)
-
-
-class MurkyLM(nn.Module):
-    def __init__(self, vocab_size: int, d_model: int, nhead: int, d_hid: int,
-                 nlayers: int, max_len: int, dropout: float, device):
-        super().__init__()
-        self.vocab_size = vocab_size
-        self.model_type = 'Transformer'
-        self.pos_encoder = PositionalEncoding(d_model, dropout, max_len=max_len)
-        encoder_layers = nn.TransformerEncoderLayer(d_model, nhead, d_hid, dropout, batch_first=True, norm_first=True)
-        layer_norm = nn.LayerNorm(d_model)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, nlayers, norm=layer_norm)
-        self.embedding = nn.Embedding(vocab_size, d_model)
-        self.d_model = d_model
-        self.linear = nn.Linear(d_model, vocab_size)
-        self.device = device
-        self.init_weights()
-
-    def init_weights(self) -> None:
-        initrange = 0.1
-        self.embedding.weight.data.uniform_(-initrange, initrange)
-        self.linear.bias.data.zero_()
-        self.linear.weight.data.uniform_(-initrange, initrange)
-
-    def forward(self, src: Tensor) -> Tensor:
-        src = self.embedding(src) * math.sqrt(self.d_model)
-        src = self.pos_encoder(src)
-        src_mask = nn.Transformer.generate_square_subsequent_mask(src.shape[1]).to(self.device)
-        output = self.transformer_encoder(src, mask=src_mask, is_causal=True)
-        output = self.linear(output)
-        return output
-
+class BaseModel(nn.Module):
     def __str__(self):
         """
         Model prints with number of trainable parameters
@@ -66,3 +16,85 @@ class MurkyLM(nn.Module):
         model_parameters = filter(lambda p: p.requires_grad, self.parameters())
         params = sum([prod(p.size()) for p in model_parameters])
         return super().__str__() + "\nTrainable parameters: {}".format(params)
+
+    def weights_init(self, m):
+        classname = m.__class__.__name__
+        if classname.find("Conv") != -1:
+            nn.init.normal_(m.weight.data, 0.0, 0.02)
+        elif classname.find("BatchNorm") != -1:
+            nn.init.normal_(m.weight.data, 1.0, 0.02)
+            nn.init.constant_(m.bias.data, 0)
+
+
+class Generator(BaseModel):
+    def __init__(self, latent_dim, G_feature_map_dim, image_num_channels, **kwargs):
+        super(Generator, self).__init__()
+        self.main = nn.Sequential(
+            # input is Z, going into a convolution
+            nn.ConvTranspose2d(latent_dim, G_feature_map_dim * 8, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(G_feature_map_dim * 8),
+            nn.ReLU(True),
+            # state size. ``(G_feature_map_dim*8) x 4 x 4``
+            nn.ConvTranspose2d(
+                G_feature_map_dim * 8, G_feature_map_dim * 4, 4, 2, 1, bias=False
+            ),
+            nn.BatchNorm2d(G_feature_map_dim * 4),
+            nn.ReLU(True),
+            # state size. ``(G_feature_map_dim*4) x 8 x 8``
+            nn.ConvTranspose2d(
+                G_feature_map_dim * 4, G_feature_map_dim * 2, 4, 2, 1, bias=False
+            ),
+            nn.BatchNorm2d(G_feature_map_dim * 2),
+            nn.ReLU(True),
+            # state size. ``(G_feature_map_dim*2) x 16 x 16``
+            nn.ConvTranspose2d(
+                G_feature_map_dim * 2, G_feature_map_dim, 4, 2, 1, bias=False
+            ),
+            nn.BatchNorm2d(G_feature_map_dim),
+            nn.ReLU(True),
+            # state size. ``(G_feature_map_dim) x 32 x 32``
+            nn.ConvTranspose2d(
+                G_feature_map_dim, image_num_channels, 4, 2, 1, bias=False
+            ),
+            nn.Tanh()
+            # state size. ``(image_num_channels) x 64 x 64``
+        )
+
+        self.apply(self.weights_init)
+
+    def forward(self, input):
+        return self.main(input)
+
+
+class Discriminator(BaseModel):
+    def __init__(self, D_feature_map_dim, image_num_channels, **kwargs):
+        super(Discriminator, self).__init__()
+        self.main = nn.Sequential(
+            # input is ``(image_num_channels) x 64 x 64``
+            nn.Conv2d(image_num_channels, D_feature_map_dim, 4, 2, 1, bias=False),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. ``(D_feature_map_dim) x 32 x 32``
+            nn.Conv2d(D_feature_map_dim, D_feature_map_dim * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(D_feature_map_dim * 2),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. ``(D_feature_map_dim*2) x 16 x 16``
+            nn.Conv2d(
+                D_feature_map_dim * 2, D_feature_map_dim * 4, 4, 2, 1, bias=False
+            ),
+            nn.BatchNorm2d(D_feature_map_dim * 4),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. ``(D_feature_map_dim*4) x 8 x 8``
+            nn.Conv2d(
+                D_feature_map_dim * 4, D_feature_map_dim * 8, 4, 2, 1, bias=False
+            ),
+            nn.BatchNorm2d(D_feature_map_dim * 8),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. ``(D_feature_map_dim*8) x 4 x 4``
+            nn.Conv2d(D_feature_map_dim * 8, 1, 4, 1, 0, bias=False),
+            nn.Sigmoid(),
+        )
+
+        self.apply(self.weights_init)
+
+    def forward(self, input):
+        return self.main(input)

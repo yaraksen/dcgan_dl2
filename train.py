@@ -1,9 +1,9 @@
 import argparse
 import torch
-from dataset import TinyStories
+from dataset import KittyDataset
 from torch.utils.data import DataLoader
-from model import MurkyLM
-from torch.nn import CrossEntropyLoss
+from model import Generator, Discriminator
+from torch.nn import BCELoss
 from trainer import Trainer
 import wandb
 from math import ceil
@@ -14,66 +14,81 @@ torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.benchmark = True
 
+
 def main(args):
     device = torch.device("cpu") if args.use_cpu else torch.device(f"cuda:0")
-    data_path = "tiny_stories_tokenized.npy"
-    sp_model_prefix = "MurkyLM"
-    use_bf16 = False if args.use_cpu else True
-    train_batch_size = 256
-    num_epochs = 20
-    grad_accum_steps = 2
-    vocab_size = 5000
-    max_len = 256
+    # use_bf16 = False if args.use_cpu else True
+    data_path = "cats/"
+    train_batch_size = 128
+    num_epochs = 200
+    lr = 2e-4
+    beta1 = 0.5
+    weight_decay = 1e-4
     model_params = {
-        "d_model": 512,
-        "nhead": 8,
-        "d_hid": 2048,
-        "nlayers": 8,
-        "dropout": 0.05,
-        "max_len": max_len,
-        "device": device
+        "latent_dim": 100,
+        "image_num_channels": 3,
+        "G_feature_map_dim": 64,
+        "D_feature_map_dim": 64,
+        "device": device,
     }
-    wandb_project = "murkylm"
+    wandb_project = "murky_gan"
     ##### END CONFIG ######
-    
+
     wandb.login(relogin=True, key=args.wandb_key)
-    wandb.init(entity="yaraksen",
-               project=wandb_project,
-               config=model_params)
+    wandb.init(entity="yaraksen", project=wandb_project, config=model_params)
 
-    train_dataset = TinyStories(data_path, train=True)
-    train_loader = DataLoader(train_dataset, train_batch_size, shuffle=True, drop_last=True, num_workers=4)
-    
-    test_dataset = TinyStories(data_path, train=False)
-    test_loader = DataLoader(test_dataset, train_batch_size, shuffle=False, num_workers=4)
-    
-    print('Train dataset size:', len(train_dataset))
-    print('Train loader length:', len(train_loader))
-    print('Test dataset size:', len(test_dataset))
-    print('Test loader length:', len(test_loader))
+    train_dataset = KittyDataset(data_path)
+    train_loader = DataLoader(
+        train_dataset, train_batch_size, shuffle=True, drop_last=True, num_workers=4
+    )
 
-    model = MurkyLM(vocab_size, **model_params)
-    print(model)
-    model = model.to(device)
+    print("Train dataset size:", len(train_dataset))
+    print("Train loader length:", len(train_loader))
 
-    criterion = CrossEntropyLoss()
-    
-    trainable_params = filter(lambda p: p.requires_grad, model.parameters())
-    optimizer = torch.optim.AdamW(trainable_params, lr=3e-4, weight_decay=1e-7)
-    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, anneal_strategy="cos", pct_start=0.2, max_lr=1e-3,
-                                                       steps_per_epoch=ceil(len(train_loader) / grad_accum_steps), epochs=num_epochs)
+    netG = Generator(**model_params).to(device)
+    netD = Discriminator(**model_params).to(device)
+    print(netG)
+    print(netD)
+
+    criterion = BCELoss()
+
+    optimizerD = torch.optim.AdamW(
+        netD.parameters(), lr=lr, betas=(beta1, 0.999), weight_decay=weight_decay
+    )
+    optimizerG = torch.optim.AdamW(
+        netG.parameters(), lr=lr, betas=(beta1, 0.999), weight_decay=weight_decay
+    )
+
+    G_scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        optimizerG,
+        anneal_strategy="cos",
+        pct_start=0.05,
+        max_lr=lr,
+        steps_per_epoch=len(train_loader),
+        epochs=num_epochs,
+    )
+
+    D_scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        optimizerD,
+        anneal_strategy="cos",
+        pct_start=0.05,
+        max_lr=lr,
+        steps_per_epoch=len(train_loader),
+        epochs=num_epochs,
+    )
 
     trainer = Trainer(
-        model,
+        netG,
+        netD,
+        optimizerG,
+        optimizerD,
+        G_scheduler,
+        D_scheduler,
         criterion,
-        optimizer,
-        lr_scheduler,
         train_loader,
-        test_loader,
         num_epochs,
-        grad_accum_steps,
-        use_bf16,
-        device
+        model_params["latent_dim"],
+        device,
     )
 
     trainer.train()
@@ -88,9 +103,5 @@ if __name__ == "__main__":
         type=str,
         help="Wandb API key",
     )
-    parser.add_argument(
-        "-cpu",
-        "--use_cpu",
-        action='store_true'
-    )
+    parser.add_argument("-cpu", "--use_cpu", action="store_true")
     main(parser.parse_args())

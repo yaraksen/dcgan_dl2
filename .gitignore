@@ -5,3 +5,8 @@ tiny_stories_tokenized.npy
 checkpoint-epoch*
 wandb
 ckpts/*
+data
+test
+train
+valid
+cats/*
