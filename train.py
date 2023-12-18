@@ -6,10 +6,7 @@ from model import Generator, Discriminator
 from torch.nn import BCELoss
 from trainer import Trainer
 import wandb
-from math import ceil
 import os
-from torchvision.datasets import ImageFolder
-from torchvision import transforms
 
 
 SEED = 42

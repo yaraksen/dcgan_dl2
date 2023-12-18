@@ -30,3 +30,14 @@ class KittyDataset(Dataset):
     def __getitem__(self, idx):
         image = self.transform(Image.open(self.all_files[idx]))
         return image
+    
+
+class TestKittyDataset(Dataset):
+    def __init__(self, images: torch.Tensor):
+        self.all_images = images
+
+    def __len__(self):
+        return len(self.all_images)
+
+    def __getitem__(self, idx):
+        return {"images": self.all_images[idx]}

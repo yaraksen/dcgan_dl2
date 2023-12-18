@@ -1,6 +1,5 @@
 __pycache__
-checkpoint-epoch*
 wandb
-ckpts/*
+ckpts
 cats/*
 data/*

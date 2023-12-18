@@ -1,30 +1,22 @@
-# Big homework 1. BLMs (Boutique LMs)
+# Big homework 2. Image generation (DCGAN)
 ## Aksenov Yaroslav
 
 ### Disclaimer: some functions and classes were heavily based on my DLA template
 
 ## Data
-The dataset can be loaded from HuggingFace and opened with tar:
+The dataset can be loaded from Kaggle and put ```cats``` dir into ```data/```, so ```data/cats/*.jpg```:
 ```bash
-wget --quiet --show-progress "https://huggingface.co/datasets/roneneldan/TinyStories/resolve/main/TinyStories_all_data.tar.gz"
-tar -xvf TinyStories_all_data.tar.gz -C tiny_stories
-```
-
-## Data manipulation
-Uniting all the texts in single file to train Sentencepiece tokenizer, ```tokenize_dataset.py``` to create .npy dataset
-```bash
-python concat_stories.py
-python tokenize_dataset.py
+kaggle datasets download -d spandan2/cats-faces-64x64-for-generative-models
+unzip cats-faces-64x64-for-generative-models
 ```
 
 ## Training
-If not running previous scripts put ```tiny_stories_tokenized.npy``` from Yandex.Disk into the main directory before running
 ```bash
 python train.py -wk="YOUR_WANDB_KEY"
 ```
 
 ## Testing
-Put ```checkpoint-epoch12.pth``` from Yandex.Disk into the main directory, launch this to get PPL (uses ```evaluate``` which is not installed by default)
+Put ```checkpoint-epoch1900.pth``` from Yandex.Disk into the main directory, launch this to get generation samples
 ```bash
 python test.py
 ```
