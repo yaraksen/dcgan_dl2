@@ -8,6 +8,8 @@ from trainer import Trainer
 import wandb
 from math import ceil
 import os
+from torchvision.datasets import ImageFolder
+from torchvision import transforms
 
 
 SEED = 42
@@ -22,10 +24,10 @@ def main(args):
     if os.path.exists("/kaggle"):
         data_path = "/kaggle/input/cats-faces-64x64-for-generative-models/cats/"
     else:
-        data_path = "cats/"
-    train_batch_size = 128
-    num_epochs = 8000
-    lr = 2e-4
+        data_path = "data/cats/"
+    train_batch_size = 64
+    num_epochs = 2000
+    lr = 0.0002
     beta1 = 0.5
     weight_decay = 0.0
     model_params = {
@@ -34,15 +36,20 @@ def main(args):
         "G_feature_map_dim": 64,
         "D_feature_map_dim": 64,
         "device": device,
+    }
+    full_config = {
         "weight_decay": weight_decay,
         "beta1": beta1,
-        "lr": lr
+        "lr": lr,
+        "num_epochs": num_epochs,
+        "train_batch_size": train_batch_size,
+        **model_params,
     }
     wandb_project = "murky_gan"
     ##### END CONFIG ######
 
     wandb.login(relogin=True, key=args.wandb_key)
-    wandb.init(entity="yaraksen", project=wandb_project, config=model_params)
+    wandb.init(entity="yaraksen", project=wandb_project, config=full_config)
 
     train_dataset = KittyDataset(data_path)
     train_loader = DataLoader(
@@ -59,38 +66,34 @@ def main(args):
 
     criterion = BCELoss()
 
-    optimizerD = torch.optim.AdamW(
-        netD.parameters(), lr=lr, betas=(beta1, 0.999), weight_decay=weight_decay
-    )
-    optimizerG = torch.optim.AdamW(
-        netG.parameters(), lr=lr, betas=(beta1, 0.999), weight_decay=weight_decay
-    )
+    optimizerD = torch.optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
+    optimizerG = torch.optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
 
-    G_scheduler = torch.optim.lr_scheduler.OneCycleLR(
-        optimizerG,
-        anneal_strategy="cos",
-        pct_start=0.05,
-        max_lr=lr,
-        steps_per_epoch=len(train_loader),
-        epochs=num_epochs,
-    )
+    # G_scheduler = torch.optim.lr_scheduler.OneCycleLR(
+    #     optimizerG,
+    #     anneal_strategy="cos",
+    #     pct_start=0.05,
+    #     max_lr=lr,
+    #     steps_per_epoch=len(train_loader),
+    #     epochs=num_epochs,
+    # )
 
-    D_scheduler = torch.optim.lr_scheduler.OneCycleLR(
-        optimizerD,
-        anneal_strategy="cos",
-        pct_start=0.05,
-        max_lr=lr,
-        steps_per_epoch=len(train_loader),
-        epochs=num_epochs,
-    )
+    # D_scheduler = torch.optim.lr_scheduler.OneCycleLR(
+    #     optimizerD,
+    #     anneal_strategy="cos",
+    #     pct_start=0.05,
+    #     max_lr=lr,
+    #     steps_per_epoch=len(train_loader),
+    #     epochs=num_epochs,
+    # )
 
     trainer = Trainer(
         netG,
         netD,
         optimizerG,
         optimizerD,
-        G_scheduler,
-        D_scheduler,
+        # G_scheduler,
+        # D_scheduler,
         criterion,
         train_loader,
         num_epochs,
