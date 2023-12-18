@@ -16,7 +16,7 @@ python train.py -wk="YOUR_WANDB_KEY"
 ```
 
 ## Testing
-Put ```checkpoint-epoch1900.pth``` from Yandex.Disk into the main directory, launch this to get generation samples
+Checkpoint ```checkpoint-epoch1900.pth``` is on GitHub and should be in the main directory
 ```bash
 python test.py
 ```
